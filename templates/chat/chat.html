@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Chat — Phynix AI{% endblock %}
+{% block nav_chat %}active{% endblock %}
+
+{% block content %}
+<div class="chat-container">
+
+  <!-- ── Top bar ── -->
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:20px 0 12px;">
+    <div class="page-header" style="margin-bottom:0;">
+      <img src="{% static 'images/logo.png' %}" alt="Phynix" width="50" height="50"
+           style="border-radius:50%;object-fit:cover;" />
+      <div>
+        <div class="brand-title" style="font-size:2rem;">Phynix_AI</div>
+        <div class="new-tagline" style="text-align:left;margin:0;font-size:0.82rem;">
+          A gentle space to understand how you feel.
+        </div>
+      </div>
+    </div>
+
+    <button
+      class="btn-secondary"
+      style="font-size:0.85rem;padding:8px 14px;"
+      hx-post="{% url 'chat:new_chat' %}"
+      hx-target="#chat-messages"
+      hx-swap="innerHTML"
+      hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
+    >
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      New chat
+    </button>
+  </div>
+
+  <!-- ── Messages area ── -->
+  <div class="chat-messages" id="chat-messages">
+
+    {% if not messages %}
+    <!-- Greeting / empty state -->
+    <div class="greeting-block fade-in" id="greeting-block">
+      <h2>{{ greeting }}, {{ username }}</h2>
+      <p>
+        Welcome to <strong>Phynix</strong> — a space to reflect and share what you're feeling.<br />
+        I'm <strong>Ashva</strong>, your companion here. Talk about your day, your thoughts,
+        or anything on your mind.
+      </p>
+      <div class="prompt-chips">
+        <button class="prompt-chip" data-text="Today, I'm feeling...">Today, I'm feeling...</button>
+        <button class="prompt-chip" data-text="Lately, what's been bothering me is...">Lately, what's been bothering me is...</button>
+        <button class="prompt-chip" data-text="Something that made me smile today was...">Something that made me smile today was...</button>
+      </div>
+    </div>
+
+    {% else %}
+    <!-- Existing messages -->
+    {% for msg in messages %}
+      {% include "chat/_message.html" with msg=msg %}
+    {% endfor %}
+    {% endif %}
+
+    <!-- HTMX typing indicator (shown during request) -->
+    <div class="typing-indicator htmx-indicator" id="typing-indicator">
+      <img src="https://images.unsplash.com/vector-1741104195197-893ea9e09a37?q=80&w=80&auto=format&fit=crop"
+           alt="Ashva" class="ashva-avatar" />
+      <div class="typing-dots">
+        <span></span><span></span><span></span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── Input bar ── -->
+  <div class="chat-input-bar">
+    <form
+      id="chat-form"
+      hx-post="{% url 'chat:send_message' %}"
+      hx-target="#chat-messages"
+      hx-swap="beforeend"
+      hx-indicator="#typing-indicator"
+      hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
+    >
+      {% csrf_token %}
+      <div class="chat-input-row">
+
+        <!-- Text input -->
+        <textarea
+          id="chat-input"
+          name="message"
+          rows="1"
+          placeholder="How are you feeling today?"
+          autocomplete="off"
+          required
+        ></textarea>
+
+        <!-- Mic button (right of textarea) -->
+        <button
+          type="button"
+          id="mic-btn"
+          class="btn-mic"
+          aria-label="Start voice input"
+          title="Voice input"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+            <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+            <line x1="12" y1="19" x2="12" y2="23"/>
+            <line x1="8" y1="23" x2="16" y2="23"/>
+          </svg>
+        </button>
+
+        <!-- Send button -->
+        <button type="submit" class="btn-send" aria-label="Send message">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <line x1="22" y1="2" x2="11" y2="13"/>
+            <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+          </svg>
+        </button>
+
+      </div>
+
+      <!-- Voice transcript preview -->
+      <div class="voice-preview" id="voice-preview"></div>
+
+    </form>
+  </div>
+
+</div>
+{% endblock %}

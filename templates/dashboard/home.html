@@ -1,0 +1,169 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Home — Phynix AI{% endblock %}
+{% block nav_home %}active{% endblock %}
+
+{% block content %}
+<div class="page-wrapper">
+
+  <!-- ── Header ── -->
+  <div class="page-header" style="margin-bottom:4px;">
+    <img src="{% static 'images/logo.png' %}" alt="Phynix"
+         style="width:60px;height:60px;border-radius:50%;object-fit:cover;" />
+    <div>
+      <div class="brand-title">Phynix_AI</div>
+      <div class="brand-tagline">AI-Powered Welfare Platform</div>
+    </div>
+  </div>
+
+  <div class="new-tagline">
+    A gentle space to understand how you feel and support your emotional well-being.
+  </div>
+
+  <!-- ── Welcome ── -->
+  <div style="text-align:center;margin:50px 0 32px;">
+    <p style="font-size:1.35rem;font-weight:400;color:var(--text);">
+      Welcome, {{ username }}
+    </p>
+    <p class="fade-in" style="
+      font-size:1.02rem;
+      font-weight:500;
+      color:#d35400;
+      margin-top:8px;
+      animation-delay:0.3s;
+    ">
+      Every journey begins with a small step. Let's begin yours together.
+    </p>
+  </div>
+
+  <!-- ── New Chat Button ── -->
+  <div style="display:flex;justify-content:center;margin-bottom:60px;">
+    <a href="{% url 'chat:chat' %}" class="btn-primary" style="font-size:1rem;padding:13px 28px;">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      New Chat
+    </a>
+  </div>
+
+  <!-- ── Daily Advice ── -->
+  <div class="section-header">Your Daily Free Advice</div>
+  <hr class="phynix-divider" />
+
+  <div class="quote-box fade-in" style="margin-top:20px;">
+    <p class="quote-text">"{{ daily_quote }}"</p>
+  </div>
+
+  <!-- ── Ashva Insights ── -->
+  <div class="section-header" style="margin-top:56px;">Ashva Insights</div>
+  <hr class="phynix-divider" />
+
+  <p class="insight-tagline">Context-aware insights from your recent activity.</p>
+  <div class="insight-block fade-in">{{ ashva_insight }}</div>
+
+  <!-- ── Dashboard ── -->
+  <div class="section-header" style="margin-top:56px;">Dashboard</div>
+  <hr class="phynix-divider" />
+
+  <!-- Mental Metrics -->
+  <div class="section-subheader" style="margin-bottom:20px;">Mental Metrics Summary</div>
+
+  <div class="metrics-grid">
+    <div class="metric-card">
+      <div class="metric-value">{{ metrics.confidence }}%</div>
+      <div class="metric-label">Confidence</div>
+      <div class="metric-delta {% if metrics.confidence_delta > 0 %}positive{% else %}negative{% endif %}">
+        {{ metrics.confidence_delta|floatformat:1 }}%
+      </div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-value">{{ metrics.risk }}%</div>
+      <div class="metric-label">Risk</div>
+      <div class="metric-delta {% if metrics.risk_delta < 0 %}positive{% else %}negative{% endif %}">
+        {{ metrics.risk_delta|floatformat:1 }}%
+      </div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-value">{{ metrics.mental_health }}%</div>
+      <div class="metric-label">Mental Health</div>
+      <div class="metric-delta {% if metrics.mental_delta > 0 %}positive{% else %}negative{% endif %}">
+        {{ metrics.mental_delta|floatformat:1 }}%
+      </div>
+    </div>
+  </div>
+
+  <div style="margin-top:16px;">
+    <span class="status-badge
+      {% if metrics.mental_health >= 70 %}status-stable
+      {% elif metrics.mental_health >= 60 %}status-caution
+      {% else %}status-vulnerable{% endif %}
+    ">
+      {% if metrics.mental_health >= 70 %}Stable ✔
+      {% elif metrics.mental_health >= 60 %}Caution ❗
+      {% else %}Vulnerable ⚠{% endif %}
+    </span>
+  </div>
+
+  <!-- Emotion Chart -->
+  <div class="section-subheader" style="margin-top:48px;margin-bottom:20px;">
+    Emotion Snapshot — Today
+  </div>
+
+  <div class="chart-container">
+    {% if today_emotions %}
+    <canvas id="emotionChart" height="180"></canvas>
+    {% else %}
+    <p style="text-align:center;color:var(--text-muted);padding:40px 0;font-size:0.9rem;">
+      No entries recorded yet today. Start a conversation with Ashva!
+    </p>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+{% if today_emotions %}
+<script>
+(function() {
+  const ctx = document.getElementById('emotionChart').getContext('2d');
+  const labels = {{ today_emotion_labels|safe }};
+  const values = {{ today_emotion_values|safe }};
+  const emotionNames = {{ today_emotion_names|safe }};
+
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [{
+        data: values,
+        backgroundColor: '#ff914d',
+        borderRadius: 6,
+        borderSkipped: false,
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            title: (items) => labels[items[0].dataIndex],
+            label: (item) => emotionNames[item.dataIndex]
+          }
+        }
+      },
+      scales: {
+        x: { grid: { display: false }, border: { display: true } },
+        y: {
+          min: 0, max: 6,
+          grid: { display: false },
+          ticks: { display: false },
+          border: { display: false }
+        }
+      }
+    }
+  });
+})();
+</script>
+{% endif %}
+{% endblock %}

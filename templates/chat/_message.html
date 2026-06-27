@@ -1,0 +1,42 @@
+{% comment %}
+  Partial template: _message.html
+  Used by chat.html on page load AND returned by HTMX on each message send.
+  msg = { sender: "user"|"bot", content: str, emotion: str, risk: str }
+{% endcomment %}
+
+{% if msg.sender == "user" %}
+<div class="msg-user fade-in">
+  <div class="msg-user-bubble">{{ msg.content }}</div>
+</div>
+
+{% else %}
+<div class="msg-bot fade-in">
+  <img
+    src="https://images.unsplash.com/vector-1741104195197-893ea9e09a37?q=80&w=80&auto=format&fit=crop"
+    alt="Ashva"
+    class="ashva-avatar"
+  />
+  <div>
+    <div class="msg-bot-bubble">{{ msg.content }}</div>
+
+    {% if msg.emotion %}
+    <div style="margin-top:8px;">
+      <button
+        class="analysis-toggle"
+        onclick="
+          var b = this.nextElementSibling;
+          b.style.display = b.style.display === 'none' ? 'block' : 'none';
+          this.textContent = b.style.display === 'none' ? '▸ Analysis' : '▾ Analysis';
+        "
+      >
+        ▸ Analysis
+      </button>
+      <div class="analysis-block" style="display:none;">
+        <strong>Emotion:</strong> {{ msg.emotion|capfirst }}<br />
+        <strong>Risk Level:</strong> {{ msg.risk }}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endif %}
