@@ -1,7 +1,10 @@
 from pathlib import Path
 import os
+
 from dotenv import load_dotenv
 load_dotenv()
+
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "change-me-in-production")
 DEBUG = os.environ.get("DEBUG", "True") == "True"
@@ -77,3 +80,7 @@ LANGUAGE_CODE = "en-us"
 TIME_ZONE = "Asia/Kolkata"
 USE_I18N = True
 USE_TZ = True
+
+# Override login URL to point to our Supabase login view
+LOGIN_URL = "/accounts/login/"
+GOOGLE_REDIRECT_URL = os.environ.get("GOOGLE_REDIRECT_URL", "http://127.0.0.1:8000/accounts/callback/")

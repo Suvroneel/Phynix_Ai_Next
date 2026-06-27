@@ -4,7 +4,7 @@ from datetime import datetime
 from zoneinfo import ZoneInfo
 
 from django.shortcuts import render, redirect
-from django.contrib.auth.decorators import login_required
+from accounts.decorators import supabase_login_required
 from django.views.decorators.http import require_POST
 from django.conf import settings
 from supabase import create_client
@@ -48,16 +48,17 @@ def _get_bio(user_name):
     except:
         return ""
 
-@login_required
+@supabase_login_required
 def diary_view(request):
-    user = request.user
+    email = request.session.get("user_email")
+    username = request.session.get("username", "")
     show_entries = request.GET.get("clear") != "1"
     profile_image = request.session.get("profile_image", "")
-    bio = _get_bio(user.username)
-    entries = _fetch_today_entries(user.username) if show_entries else []
+    bio = _get_bio(username)
+    entries = _fetch_today_entries(username) if show_entries else []
 
     context = {
-        "username": user.username,
+        "username": username,
         "profile_image": profile_image,
         "bio": bio,
         "entries": entries,
@@ -67,10 +68,11 @@ def diary_view(request):
     }
     return render(request, "diaries/diary.html", context)
 
-@login_required
+@supabase_login_required
 @require_POST
 def save_entry(request):
-    user = request.user
+    email = request.session.get("user_email")
+    username = request.session.get("username", "")
     entry_text = request.POST.get("entry", "").strip()
     if not entry_text:
         return redirect("diaries:diary")
@@ -81,7 +83,7 @@ def save_entry(request):
         try:
             sb = _sb()
             ext = image_file.name.split(".")[-1]
-            path = f"{user.username}/{uuid.uuid4().hex}.{ext}"
+            path = f"{username}/{uuid.uuid4().hex}.{ext}"
             sb.storage.from_("journal-images").upload(path, image_file.read(), {"content-type": image_file.content_type})
             image_url = sb.storage.from_("journal-images").get_public_url(path)
         except Exception as e:
@@ -89,8 +91,8 @@ def save_entry(request):
 
     try:
         _sb().table("mood_journal").insert({
-            "user_name": user.username,
-            "user_email": user.email,
+            "user_name": username,
+            "user_email": email,
             "entry": entry_text,
             "image_url": image_url,
         }).execute()
@@ -100,30 +102,31 @@ def save_entry(request):
     # RAG memory
     try:
         from chat.services.memory import upsert_memory
-        upsert_memory(text=entry_text, user_email=user.email, user_name=user.username, source="diary")
+        upsert_memory(text=entry_text, user_email=email, user_name=username, source="diary")
     except:
         pass
 
     return redirect("diaries:diary")
 
-@login_required
+@supabase_login_required
 @require_POST
 def update_bio(request):
-    user = request.user
+    email = request.session.get("user_email")
+    username = request.session.get("username", "")
     bio = request.POST.get("bio", "").strip()
     try:
         sb = _sb()
         count = sb.table("user_bio").select("id", count="exact").execute().count or 0
         sb.table("user_bio").insert({
             "id": count + 1,
-            "user_name": user.username,
+            "user_name": username,
             "user_description": bio,
         }).execute()
     except Exception as e:
         print(f"Bio update error: {e}")
     return redirect("diaries:diary")
 
-@login_required
+@supabase_login_required
 @require_POST
 def set_avatar(request):
     avatar_num = request.POST.get("avatar", "1")

@@ -1,6 +1,6 @@
 import random
 from django.shortcuts import render
-from django.contrib.auth.decorators import login_required
+from accounts.decorators import supabase_login_required
 from django.conf import settings
 from supabase import create_client
 import pandas as pd
@@ -113,15 +113,16 @@ def _ashva_insight(user_name, user_email):
         pass
     return "Take a moment for yourself today. Your emotional well-being matters."
 
-@login_required
+@supabase_login_required
 def home(request):
-    user = request.user
-    metrics = _compute_metrics(user.username)
-    labels, values, names = _today_emotions(user.username)
-    insight = _ashva_insight(user.username, user.email)
+    email = request.session.get("user_email")
+    username = request.session.get("username", "")
+    metrics = _compute_metrics(username)
+    labels, values, names = _today_emotions(username)
+    insight = _ashva_insight(username, email)
 
     context = {
-        "username": user.username,
+        "username": username,
         "daily_quote": random.choice(FREE_ADVICE),
         "metrics": metrics,
         "today_emotions": bool(labels),

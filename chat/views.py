@@ -1,10 +1,7 @@
-"""
-chat/views.py — thin views, all logic in services/
-"""
 from django.shortcuts import render
 from django.http import HttpResponse
 from django.views.decorators.http import require_POST
-from django.contrib.auth.decorators import login_required
+from accounts.decorators import supabase_login_required
 from datetime import datetime
 
 
@@ -17,18 +14,18 @@ def _get_greeting():
     return "Good evening"
 
 
-@login_required
+@supabase_login_required
 def chat_view(request):
     messages = request.session.get("chat_messages", [])
     context = {
         "messages": messages,
         "greeting": _get_greeting(),
-        "username": request.user.username,
+        "username": request.session.get("username", ""),
     }
     return render(request, "chat/chat.html", context)
 
 
-@login_required
+@supabase_login_required
 @require_POST
 def send_message(request):
     from .services.emotion import predict_emotion, get_risk_level
@@ -36,7 +33,8 @@ def send_message(request):
     from .services.memory import upsert_memory
     from .services.db import save_message
 
-    user = request.user
+    email = request.session.get("user_email")
+    username = request.session.get("username")
     text = request.POST.get("message", "").strip()
     if not text:
         return HttpResponse("")
@@ -60,37 +58,27 @@ def send_message(request):
         temperature=0.7,
     )
 
-    save_message(
-        user_email=user.email,
-        user_name=user.username,
-        message=text,
-        emotion=emotion_label,
-        risk=risk_level,
-        reply=reply,
-    )
-
-    upsert_memory(text=text, user_email=user.email, user_name=user.username, source="chat")
+    save_message(user_email=email, user_name=username, message=text,
+                 emotion=emotion_label, risk=risk_level, reply=reply)
+    upsert_memory(text=text, user_email=email, user_name=username, source="chat")
 
     session_msgs.append({"sender": "user", "content": text})
     session_msgs.append({"sender": "bot", "content": reply, "emotion": emotion_label, "risk": risk_level})
     request.session["chat_messages"] = session_msgs
     request.session.modified = True
 
-    user_msg = {"sender": "user", "content": text}
-    bot_msg = {"sender": "bot", "content": reply, "emotion": emotion_label, "risk": risk_level}
-
-    user_html = render(request, "chat/_message.html", {"msg": user_msg}).content.decode()
-    bot_html = render(request, "chat/_message.html", {"msg": bot_msg}).content.decode()
+    user_html = render(request, "chat/_message.html", {"msg": {"sender": "user", "content": text}}).content.decode()
+    bot_html = render(request, "chat/_message.html", {"msg": {"sender": "bot", "content": reply, "emotion": emotion_label, "risk": risk_level}}).content.decode()
     return HttpResponse(user_html + bot_html)
 
 
-@login_required
+@supabase_login_required
 @require_POST
 def new_chat(request):
     request.session["chat_messages"] = []
     request.session.modified = True
     greeting = _get_greeting()
-    username = request.user.username
+    username = request.session.get("username", "")
     html = f"""
     <div class="greeting-block fade-in">
       <h2>{greeting}, {username}</h2>

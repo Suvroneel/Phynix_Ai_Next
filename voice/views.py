@@ -5,11 +5,11 @@ Called by phynix-voice.js when Web Speech API is unavailable.
 import json
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
-from django.contrib.auth.decorators import login_required
+from accounts.decorators import supabase_login_required
 from django.conf import settings
 
 
-@login_required
+@supabase_login_required
 @require_POST
 def transcribe(request):
     audio_file = request.FILES.get("audio")
