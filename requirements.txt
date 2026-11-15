@@ -1,0 +1,30 @@
+# Core ML / NLP
+torch>=2.0.0
+transformers>=4.30.0
+faster-whisper>=0.10.0
+
+# Web app
+streamlit>=1.28.0
+streamlit-option-menu>=0.3.6
+audio-recorder-streamlit>=0.0.5
+
+# Data & ML utilities
+numpy>=1.21.0
+pandas>=1.5.0
+scikit-learn>=1.0.0
+plotly>=5.0.0
+
+# Backend / DB
+supabase>=2.0.0
+postgrest>=0.10.6
+
+# Auth
+streamlit-supabase-auth
+
+#RAG / vectordb
+pinecone>=3.0.0
+sentence-transformers>=2.2.0
+
+
+# LLM (OpenRouter uses the OpenAI-compatible client)
+openai>=1.30.0
