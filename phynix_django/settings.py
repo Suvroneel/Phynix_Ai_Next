@@ -70,7 +70,7 @@ SUPABASE_KEY = os.environ.get("SUPABASE_KEY", "")
 SUPABASE_SERVICE_KEY = os.environ.get("SUPABASE_SERVICE_KEY", "")
 
 # HuggingFace
-HF_TOKEN = os.environ.get("HF_TOKEN", "")
+#HF_TOKEN = os.environ.get("HF_TOKEN", "")
 
 # OpenAI (optional, for Whisper API fallback)
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
@@ -84,3 +84,13 @@ USE_TZ = True
 # Override login URL to point to our Supabase login view
 LOGIN_URL = "/accounts/login/"
 GOOGLE_REDIRECT_URL = os.environ.get("GOOGLE_REDIRECT_URL", "http://127.0.0.1:8000/accounts/callback/")
+
+#openrouter
+OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY", "")
+SITE_URL = os.environ.get("SITE_URL", "http://127.0.0.1:8000")
+OPENROUTER_MODELS = [
+    m.strip() for m in os.environ.get(
+        "OPENROUTER_MODELS",
+        "baidu/ernie-5.5-flash-preview:free,google/gemma-4-31b-it:free,openrouter/free",
+    ).split(",") if m.strip()
+]
